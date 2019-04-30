@@ -1,78 +1,86 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { Button, Table } from 'semantic-ui-react';
-
-import { getUsersSaga } from '../../actions';
-
-import styles from './styles';
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
+import PropTypes from 'prop-types'
+import {createStructuredSelector} from 'reselect'
+import Filter from './components/Filter'
 
 class Home extends Component {
-  constructor() {
-    super();
-    this.handleBtnOnClick = this.handleBtnOnClick.bind(this);
+
+  renderBestMatch() {
+
+    const {isLoading, bestMatch} = this.props.Home
+
+    if (isLoading) return <div className="text-center text-success">Loading...</div>
+
+    if (!bestMatch) return <div className="text-center text-danger">No city found</div>
+
+    return <div className="row">
+      <div className="col-12 col-sm-6 col-md-4 col-lg-3 mx-auto">
+        <div className="card bg-secondary mb-3">
+          <div className="card-header p-2">
+            <h4 className="m-0 font-weight-bold text-success">{bestMatch.name}</h4>
+          </div>
+          <div className="card-body p-2">
+            Temperature: {bestMatch.main.temp}*C
+            Humidity: {bestMatch.main.humidity}%
+          </div>
+        </div>
+      </div>
+    </div>
   }
 
-  handleBtnOnClick() {
-    this.props.getUsersSaga();
+  renderRelevant() {
+
+    const {isLoading, relevantMatches} = this.props.Home
+
+    if (isLoading) return <div className="text-center text-success">Loading...</div>
+
+    if (relevantMatches.length === 0) return <div className="text-center text-danger">No cities found</div>
+
+    return <div className="row">
+      {relevantMatches.map((item, i) => <div key={i} className="col-12 col-sm-6 col-md-4 col-lg-3 mx-auto">
+        <div className="card bg-secondary mb-3">
+          <div className="card-header p-2">
+            <h5 className="h5 m-0 font-weight-bold">#{i + 1}&nbsp;{item.name}</h5>
+          </div>
+          <div className="card-body p-2">
+            Temperature: {item.main.temp}*C
+            Humidity: {item.main.humidity}%
+          </div>
+        </div>
+      </div>)}
+    </div>
   }
 
   render() {
-    const { users } = this.props;
-    return (
-      <div style={styles.container}>
-        {users.length > 0
-          && (
-          <Table
-            striped
-          >
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Id</Table.HeaderCell>
-                <Table.HeaderCell>Name</Table.HeaderCell>
-                <Table.HeaderCell>Username</Table.HeaderCell>
-                <Table.HeaderCell>E-mail</Table.HeaderCell>
-                <Table.HeaderCell>Phone</Table.HeaderCell>
-                <Table.HeaderCell>Website</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {users.map(({
-                id,
-                name,
-                email,
-                phone,
-                username,
-                website
-              }, i) => (
-                <Table.Row key={i}>
-                  <Table.Cell>{id}</Table.Cell>
-                  <Table.Cell>{name}</Table.Cell>
-                  <Table.Cell>{username}</Table.Cell>
-                  <Table.Cell>{email}</Table.Cell>
-                  <Table.Cell>{phone}</Table.Cell>
-                  <Table.Cell>{website}</Table.Cell>
-                </Table.Row>))}
-            </Table.Body>
-          </Table>
-          )
-        }
-        <Button
-          color="teal"
-          onClick={this.handleBtnOnClick}
-        >
-          Load Users
-        </Button>
+
+    return <div className="container">
+      <div className="row">
+        <div className="col-12">
+          <h1 className="text-center">The best weather on earth</h1>
+
+          <Filter/>
+
+          <h2 className="text-center">Best match</h2>
+          {this.renderBestMatch()}
+
+          <h2 className="text-center">Relevant results</h2>
+          {this.renderRelevant()}
+
+        </div>
       </div>
-    );
+
+
+    </div>
   }
 }
 
-const mapStateToProps = state => ({
-  users: state.usersReducer.users
-});
+Home.propTypes = {
+  Home: PropTypes.any.isRequired
+}
 
-const mapDispatchToProps = dispatch => ({
-  getUsersSaga: () => dispatch(getUsersSaga())
-});
+const selectors = createStructuredSelector({
+  Home: store => store.Home
+})
 
-export default connect(mapStateToProps, mapDispatchToProps)(Home);
+export default connect(selectors)(Home);
